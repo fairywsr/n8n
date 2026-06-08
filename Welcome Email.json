@@ -1,0 +1,227 @@
+{
+  "name": "Welcome Email",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "5d2247e6-c2bc-45c6-a61e-61c1a357bb36",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "66d61169-ef1a-41ae-b18e-fb48b563f060",
+      "name": "Webhook",
+      "webhookId": "5d2247e6-c2bc-45c6-a61e-61c1a357bb36"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.body.Email }}",
+        "subject": "Welcome to n8n automation learning",
+        "message": "=Hi {{ $json.body.Name }} Welcome to My first n8n automation I am glad You fill the form and get this email Thank You For Your support.\nStay blessed.\nRegards: Faria ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "37ba8c00-534b-4e99-9f42-c96bb3781bc0",
+      "name": "Send a message",
+      "webhookId": "b06594c6-cb77-4521-a085-8a24c86bbd80",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Vy7pZUdcTHn7ilem",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ecdc7bc1-7de8-4fb2-8ddb-761500dd80e4",
+              "leftValue": "={{ $('Webhook').item.json.body.Email }}",
+              "rightValue": "gmail.com",
+              "operator": {
+                "type": "string",
+                "operation": "notEndsWith"
+              }
+            },
+            {
+              "id": "4f4a3c1f-0047-4d09-a3b6-c72f1a8b26b5",
+              "leftValue": "={{ $('Webhook').item.json.body.Email }}",
+              "rightValue": "hotmail.com",
+              "operator": {
+                "type": "string",
+                "operation": "notEndsWith"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        16
+      ],
+      "id": "09cfee77-88e4-447d-9680-68af2985579a",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1maM1vDD0RDO7a3WRLZ84A3id583sDFN0lyaQyseMdy4",
+          "mode": "list",
+          "cachedResultName": "fellow signups ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1maM1vDD0RDO7a3WRLZ84A3id583sDFN0lyaQyseMdy4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1maM1vDD0RDO7a3WRLZ84A3id583sDFN0lyaQyseMdy4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('Webhook').item.json.body.Name }}",
+            "Email": "={{ $('Webhook').item.json.body.Email }}",
+            "Gender": "={{ $('Webhook').item.json.body.Gender }}",
+            "Message": "={{ $('Webhook').item.json.body['Any message'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Gender",
+              "displayName": "Gender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        640,
+        -16
+      ],
+      "id": "12d7427e-2335-4d13-9088-9b491b30479c",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5zN5gn3z2TYXwAxi",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c7ae8f5a-c7d6-43fd-ba99-5777d1b3b2e1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9741ca23fbcdcb8546f2db8f23a5e908f7de375d074f862a3be53d5b995bac48"
+  },
+  "nodeGroups": [],
+  "id": "v5SAftnugoizHs5d",
+  "tags": [
+    {
+      "updatedAt": "2026-06-07T12:47:25.469Z",
+      "createdAt": "2026-06-07T12:47:25.469Z",
+      "id": "o1eTj8hvqEPKuAdQ",
+      "name": "learning"
+    }
+  ]
+}

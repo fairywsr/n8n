@@ -11,10 +11,11 @@ Here, I store my exported workflow `.json` files, notes on implementation, and l
 | Workflow File | Description | Key Integrations / Nodes |
 | :--- | :--- | :--- |
 | [Welcome Email.json](https://github.com/fairywsr/n8n/blob/main/Welcome%20Email.json) | Welcomes new form submissions via email and logs their details to Google Sheets. | Webhook, Gmail, IF Node, Google Sheets |
+| [orders status Alerts.json](https://github.com/fairywsr/n8n/blob/main/orders%20status%20Alerts.json) | Monitors order status changes in a Google Sheet and sends tailored alerts via Gmail and Slack. | Google Sheets, Switch Node, Gmail, Slack |
 
 ---
 
-## 🛠️ Featured Workflow: Welcome Email
+## 🛠️ Featured Workflow 1: Welcome Email
 
 This is my first n8n automation! It automates the onboarding process when someone fills out a form or triggers a webhook.
 
@@ -63,6 +64,48 @@ graph TD
 
 ---
 
+## 🛠️ Featured Workflow 2: Order Status Alerts
+
+This workflow monitors order status updates from a Google Sheets document and automatically routes notification alerts to customers (via Gmail) and internal operations channels (via Slack).
+
+### 🔄 How It Works (Workflow Flow)
+
+```mermaid
+graph TD
+    A[Manual Trigger] --> B[Google Sheets Node: Get Rows]
+    B --> C{Switch Node: Check Status}
+    C -- "Pending" --> D[Gmail Node: Customer Alert]
+    C -- "Processing" --> E[Slack Node: Internal Urgent Alert]
+    C -- "Cancelled" --> F[Gmail: Refund Notice & Slack: Refund Support]
+    C -- "Refunded" --> F
+```
+
+### 🧩 Node Breakdown
+
+1. **Manual Trigger**
+   - **Purpose:** Acts as the manual testing point to initiate the sheet data pull.
+
+2. **Get row(s) in sheet (Google Sheets Node)**
+   - **Purpose:** Fetches the mock order dataset containing fields like `order_id`, `customer_email`, and `order_status`.
+   - **Source Spreadsheet:** `Mock_Orders_Data`
+   - **Sheet Tab:** `Mock_Order_Data`
+
+3. **Switch Node (Multi-path Routing)**
+   - **Purpose:** Segregates incoming order data dynamically based on the value of the `order_status` property.
+   - **Routed Branches:**
+     - **Pending:** Sends a standard update email to the customer.
+     - **Processing:** Sends a Slack message flagging the order as high priority.
+     - **Cancelled:** Sends a cancellation email to the customer and triggers a refund alert on Slack.
+     - **Refunded:** Triggers the same cancellation/refund communications (Gmail and Slack).
+
+4. **Gmail Notifications**
+   - **Purpose:** Dispatches localized updates to `customer_email` with state-specific messages (e.g., pending notification vs. cancel/refund notification).
+
+5. **Slack Notifications**
+   - **Purpose:** Alerts support staff in channels like `#all-testing-n8n` and `#cancel-and-refunded-orders` to manage urgent processing or refund processing.
+
+---
+
 ## 💡 Learning Insights & Tips
 
 > [!TIP]
@@ -72,6 +115,10 @@ graph TD
 > - `Email notEndsWith gmail.com` **OR** `Email notEndsWith hotmail.com`
 > - **Behavior:** Because it is set to `OR`, **every single email will pass to the True branch**. For example, a `gmail.com` address does not end with `hotmail.com` (which is true), so the condition passes.
 > - **Fix:** To filter out _both_ Gmail and Hotmail addresses, change the combinator from `OR` to **`AND`** in the `IF` node parameters.
+>
+> [!TIP]
+> **Parallel Node Connections in Switch / Routing Nodes:**
+> In the `orders status Alerts` workflow, both the `Cancelled` and `Refunded` branches of the Switch node are connected to **two destination nodes simultaneously** (Gmail for customers and Slack for internal operations). n8n executes all connected branches in parallel automatically without needing split or fork nodes, making multi-channel notifications extremely straightforward.
 
 ---
 

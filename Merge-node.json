@@ -1,0 +1,680 @@
+{
+  "name": "Merge-node",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2000,
+        304
+      ],
+      "id": "0ceb25df-8ddb-4863-8e87-fad9fd49b989",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.order_status }}",
+                    "rightValue": "Pending",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "fbc0d39e-4c97-40fd-a28e-fbc02b653db4"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Pending Orders"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "698b6d92-21db-4441-ab9f-4adfedffd295",
+                    "leftValue": "={{ $json.order_prority }}",
+                    "rightValue": "Processing proprity Orders",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Processing Orders"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d0b407f0-444e-477e-931a-ab450099046a",
+                    "leftValue": "={{ $json.order_status }}",
+                    "rightValue": "Cancelled",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Cancelled Orders"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "2796020f-f652-4649-92ad-19a6f3e66e7b",
+                    "leftValue": "={{ $json.order_status }}",
+                    "rightValue": "Refunded",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Refunded Orders"
+            }
+          ]
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1104,
+        272
+      ],
+      "id": "cf75db63-b504-48fc-9f72-db59e5fee937",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "sendTo": "=fairywsr@gmail.com",
+        "subject": "=order is in pending state ",
+        "message": "=These orders are in pending state of {{ $now }} {{ $json.order_id }} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -432,
+        112
+      ],
+      "id": "b8c01070-ff3f-48b6-9ba8-a7bf54f6731d",
+      "name": "Send a message",
+      "webhookId": "4e4ef739-8a07-4e71-aff3-c498b952fe7b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mGbDOpKV41u4Yo7T",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0B937JS2BZ",
+          "mode": "list",
+          "cachedResultName": "all-testing-n8n"
+        },
+        "text": "=These orders have high prority Check it out still in processing state: {{ $json.order_id }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        -432,
+        304
+      ],
+      "id": "41518d89-ed15-4010-9933-c313ff224f7d",
+      "name": "Send a message1",
+      "webhookId": "190e7500-69ae-4721-baa1-725db52783d8",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "N6OlHtViLR8kTrtt",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "=fairywsr@gmail.com",
+        "subject": "=cancel orders",
+        "message": "=\\These orders are cancelleed {{$json.order_id  }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -208,
+        400
+      ],
+      "id": "a9122dbe-5963-42ef-8c33-613ae7b476a4",
+      "name": "Send a message2",
+      "webhookId": "4e4ef739-8a07-4e71-aff3-c498b952fe7b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mGbDOpKV41u4Yo7T",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0B9MU9LKTL",
+          "mode": "list",
+          "cachedResultName": "cancel-and-refunded-orders"
+        },
+        "text": "=These orders or cancelled {{$json.order_id  }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        -208,
+        592
+      ],
+      "id": "34bd2201-152f-4706-8cff-41df80ef99a4",
+      "name": "Send a message3",
+      "webhookId": "190e7500-69ae-4721-baa1-725db52783d8",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "N6OlHtViLR8kTrtt",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1nKvC3uJHYmzwllEbpfPrKa6vBMO657tztx7sjhhgAzc",
+          "mode": "list",
+          "cachedResultName": "Mock_Order_Details_Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nKvC3uJHYmzwllEbpfPrKa6vBMO657tztx7sjhhgAzc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 577413004,
+          "mode": "list",
+          "cachedResultName": "Mock_Order_Details_Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nKvC3uJHYmzwllEbpfPrKa6vBMO657tztx7sjhhgAzc/edit#gid=577413004"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1776,
+        208
+      ],
+      "id": "3c298591-958a-4021-994a-91c6333608db",
+      "name": "get-orders-data",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "zcAFQvBLTIn9lm4W",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1F-6oW8mT0rDSzzKqphamYxJVXJB3JKUUGjU4imkGcp4",
+          "mode": "list",
+          "cachedResultName": "Mock_Orders_Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1F-6oW8mT0rDSzzKqphamYxJVXJB3JKUUGjU4imkGcp4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1046332817,
+          "mode": "list",
+          "cachedResultName": "Mock_Order_Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1F-6oW8mT0rDSzzKqphamYxJVXJB3JKUUGjU4imkGcp4/edit#gid=1046332817"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1776,
+        400
+      ],
+      "id": "4293d2a2-34fb-4fbd-bf52-4eab1e8821c6",
+      "name": "get orders details",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "zcAFQvBLTIn9lm4W",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": " order_id",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1552,
+        304
+      ],
+      "id": "228ab691-7f8b-4627-9ff4-664e09ddaf3c",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7244fffc-32f7-4656-a016-d202bbb8238d",
+              "name": "full_Name",
+              "value": "={{ $json.first_name }} {{ $json.last_name }}",
+              "type": "string"
+            },
+            {
+              "id": "71c6cf76-dcdf-463a-8cc7-4598cc8c8afb",
+              "name": "order_prority",
+              "value": "={{ ($now.diffTo($json.order_date, 'days') > 7) && ($json.order_status === \"processing\") ? \"high\": \"standard\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "except",
+        "excludeFields": "first_name , last_name",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1328,
+        304
+      ],
+      "id": "35cf5589-4ecd-4037-a906-714ce51e9084",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "order_id"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        112
+      ],
+      "id": "fc92fec1-1b9f-420d-bf5b-952d2eaba751",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "order_id",
+        "options": {
+          "removeOtherFields": true
+        }
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        112
+      ],
+      "id": "8eaabadc-0fea-46df-804c-30f5e88aad2d",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "order_id",
+        "options": {
+          "removeOtherFields": true
+        }
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        304
+      ],
+      "id": "bc454c6e-c829-41d3-883f-4b6f800776ad",
+      "name": "Remove Duplicates1"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "order_id"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        304
+      ],
+      "id": "274a75dc-9a5f-47ff-81e5-9cedc1608068",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -880,
+        496
+      ],
+      "id": "11bdfd47-81c0-478a-b435-465bd5e1a820",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "order_id",
+        "options": {
+          "removeOtherFields": true
+        }
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        496
+      ],
+      "id": "561b7af9-f85c-4e77-8645-c2f4d47b00d6",
+      "name": "Remove Duplicates2"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "order_id"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        496
+      ],
+      "id": "7a8a8599-d39c-4231-8c2f-5a9552935090",
+      "name": "Aggregate2"
+    },
+    {
+      "parameters": {
+        "content": "## Learning \n\n**In this workflow I learn merge node, duplicate node, aggregate  node and remove node**",
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2336,
+        304
+      ],
+      "typeVersion": 1,
+      "id": "8a1e82f2-fdf6-4893-bf5b-0ca913136ab0",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "get orders details",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "get-orders-data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Remove Duplicates1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "get orders details": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "get-orders-data": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates2": {
+      "main": [
+        [
+          {
+            "node": "Aggregate2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate2": {
+      "main": [
+        [
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "94389385-265f-4029-a688-7ca1e6da56f2",
+  "meta": {
+    "instanceId": "9741ca23fbcdcb8546f2db8f23a5e908f7de375d074f862a3be53d5b995bac48"
+  },
+  "nodeGroups": [],
+  "id": "qpw8xn5TOD9SHtTW",
+  "tags": [
+    {
+      "updatedAt": "2026-06-07T12:47:25.469Z",
+      "createdAt": "2026-06-07T12:47:25.469Z",
+      "id": "o1eTj8hvqEPKuAdQ",
+      "name": "learning"
+    }
+  ]
+}

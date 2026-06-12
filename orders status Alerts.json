@@ -1,0 +1,355 @@
+{
+  "name": "orders status Alerts",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        144
+      ],
+      "id": "aee4571a-5fe5-4c01-9491-0267b11e144e",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1F-6oW8mT0rDSzzKqphamYxJVXJB3JKUUGjU4imkGcp4",
+          "mode": "list",
+          "cachedResultName": "Mock_Orders_Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1F-6oW8mT0rDSzzKqphamYxJVXJB3JKUUGjU4imkGcp4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1046332817,
+          "mode": "list",
+          "cachedResultName": "Mock_Order_Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1F-6oW8mT0rDSzzKqphamYxJVXJB3JKUUGjU4imkGcp4/edit#gid=1046332817"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        144
+      ],
+      "id": "1b0aeba9-c4b9-44e8-a030-8c6fdab5b948",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "zcAFQvBLTIn9lm4W",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.order_status }}",
+                    "rightValue": "Pending",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "fbc0d39e-4c97-40fd-a28e-fbc02b653db4"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Pending Orders"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "698b6d92-21db-4441-ab9f-4adfedffd295",
+                    "leftValue": "={{ $json.order_status }}",
+                    "rightValue": "Processing",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Processing Orders"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d0b407f0-444e-477e-931a-ab450099046a",
+                    "leftValue": "={{ $json.order_status }}",
+                    "rightValue": "Cancelled",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Cancelled Orders"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "2796020f-f652-4649-92ad-19a6f3e66e7b",
+                    "leftValue": "={{ $json.order_status }}",
+                    "rightValue": "Refunded",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Refunded Orders"
+            }
+          ]
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        112
+      ],
+      "id": "af8372cd-ff5d-4db2-be0d-0aa555661392",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.customer_email }}",
+        "subject": "={{ $json.order_id }}, order is in pending state ",
+        "message": "This is testing email to test n8n automation for tracking order status",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        -144
+      ],
+      "id": "2649a2f1-83e2-4773-9145-a336bfd5cf31",
+      "name": "Send a message",
+      "webhookId": "4e4ef739-8a07-4e71-aff3-c498b952fe7b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mGbDOpKV41u4Yo7T",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0B937JS2BZ",
+          "mode": "list",
+          "cachedResultName": "all-testing-n8n"
+        },
+        "text": "= hey this order ( {{ $json.order_id }} ) is high prority is still in {{ $json.order_status }} status, quickly check it out.. ",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        672,
+        48
+      ],
+      "id": "bb379406-83d4-461a-bcf3-f3aa24d081e3",
+      "name": "Send a message1",
+      "webhookId": "190e7500-69ae-4721-baa1-725db52783d8",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "N6OlHtViLR8kTrtt",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.customer_email }}",
+        "subject": "={{ $json.order_id }}, order is cancel",
+        "message": "This is testing email to test n8n automation for tracking order is cancelled..  Your payment refound as soon as possible.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        240
+      ],
+      "id": "c344a263-d427-40b4-a666-18c3e3048a8f",
+      "name": "Send a message2",
+      "webhookId": "4e4ef739-8a07-4e71-aff3-c498b952fe7b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mGbDOpKV41u4Yo7T",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0B9MU9LKTL",
+          "mode": "list",
+          "cachedResultName": "cancel-and-refunded-orders"
+        },
+        "text": "= hey this order ( {{ $json.order_id }} ) is cancel make possible quick refound.",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        672,
+        432
+      ],
+      "id": "a64de9e6-c7c7-4b06-b91e-f0a6c97de569",
+      "name": "Send a message3",
+      "webhookId": "190e7500-69ae-4721-baa1-725db52783d8",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "N6OlHtViLR8kTrtt",
+          "name": "Slack account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9083cdc8-e8e9-4f74-be41-82c48bcd776f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9741ca23fbcdcb8546f2db8f23a5e908f7de375d074f862a3be53d5b995bac48"
+  },
+  "nodeGroups": [],
+  "id": "3uRHbPkmfu3DkCcT",
+  "tags": [
+    {
+      "updatedAt": "2026-06-07T12:47:25.469Z",
+      "createdAt": "2026-06-07T12:47:25.469Z",
+      "id": "o1eTj8hvqEPKuAdQ",
+      "name": "learning"
+    }
+  ]
+}

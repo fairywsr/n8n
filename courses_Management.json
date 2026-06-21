@@ -1,0 +1,487 @@
+{
+  "name": "Lead_Management",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "a4908081-22cf-414d-83b3-a637e8d773c9",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        32,
+        80
+      ],
+      "id": "2f1c7835-bea6-4580-9365-4f336c812ad0",
+      "name": "Webhook",
+      "webhookId": "a4908081-22cf-414d-83b3-a637e8d773c9"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1NnZ0oFnVGDgxZEHdwvqJH5NUSGXh4zYY-wUM5FyMm-c",
+          "mode": "list",
+          "cachedResultName": "Lead Management workflow n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1NnZ0oFnVGDgxZEHdwvqJH5NUSGXh4zYY-wUM5FyMm-c/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1NnZ0oFnVGDgxZEHdwvqJH5NUSGXh4zYY-wUM5FyMm-c/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.body.Name }}",
+            "Email": "={{ $json.body.Email }}",
+            "Phone Number": "={{ $json.body['Phone Number'] }}",
+            "Upload screenshot URl": "={{ $json.body['Registration Fees is Rs: 25000,  After transfer this fees upload a screen shot.'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Upload screenshot URl",
+              "displayName": "Upload screenshot URl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        256,
+        80
+      ],
+      "id": "070400bd-92fd-4e44-93bc-d70aa14e0681",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5zN5gn3z2TYXwAxi",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "aa130c73-7c53-4f5b-843a-0cefc87c0ffa",
+              "leftValue": "={{ $json['Upload screenshot URl'] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        480,
+        80
+      ],
+      "id": "a1fea9e0-9dbd-4582-9d97-63727e67c9b6",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Append row in sheet').item.json.Email }}",
+        "subject": "Confirmation Email to Enroll in course",
+        "message": "You successfully enroll this course for further updates saty tuned with us.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        704,
+        176
+      ],
+      "id": "3986a3b5-094b-4cb1-a4af-85059ba2a5db",
+      "name": "Confirmation Email",
+      "webhookId": "dfbc8b4f-57fe-4a9e-a5e7-6ce86240302a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mGbDOpKV41u4Yo7T",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Append row in sheet').item.json.Email }}",
+        "subject": "Course Fee",
+        "message": "You fill the registration form of this course. If You want to enroll in course pay the fees and send screenshot  as reply of this email",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        704,
+        -16
+      ],
+      "id": "88c3d492-adce-436d-8f66-deb1a9502e62",
+      "name": "Reminder Email",
+      "webhookId": "dfbc8b4f-57fe-4a9e-a5e7-6ce86240302a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mGbDOpKV41u4Yo7T",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BC15M8DK2",
+          "mode": "list",
+          "cachedResultName": "courseenrolls"
+        },
+        "text": "=New Confirm Enroll For Course 1\nname:{{ $('Append row in sheet').item.json.Name }}\nEmail:{{ $('Append row in sheet').item.json.Email }}\nPhone Number:{{ $('Append row in sheet').item.json['Phone Number'] }}\n",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        928,
+        176
+      ],
+      "id": "09c38bdf-b374-4fa1-b8fd-df41640d1e78",
+      "name": "Send a message",
+      "webhookId": "874e4957-3e84-4208-b9da-c1cf6d2b738f",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "N6OlHtViLR8kTrtt",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "38255b46-548e-809e-9df4-e1fca91cba74",
+          "mode": "list",
+          "cachedResultName": "Tasks Tracker",
+          "cachedResultUrl": "https://app.notion.com/p/38255b46548e809e9df4e1fca91cba74"
+        },
+        "title": "New Confirmation Alert",
+        "propertiesUi": {
+          "propertyValues": []
+        },
+        "blockUi": {
+          "blockValues": [
+            {
+              "textContent": "=Name: {{ $('If').item.json.Name }}\nEmail: {{ $('If').item.json.Email }}\nPhone Number:{{ $('If').item.json['Phone Number'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1152,
+        176
+      ],
+      "id": "acbfbd7d-fc33-49ee-9362-af70c244f6d8",
+      "name": "Create a database page",
+      "credentials": {
+        "notionApi": {
+          "id": "Aje6hTGgbCVSk9M8",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "app9HTB75sEXSMPo3",
+          "mode": "list",
+          "cachedResultName": "Record of students",
+          "cachedResultUrl": "https://airtable.com/app9HTB75sEXSMPo3"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblBFVqyiYOJ4hTCJ",
+          "mode": "list",
+          "cachedResultName": "Table 1",
+          "cachedResultUrl": "https://airtable.com/app9HTB75sEXSMPo3/tblBFVqyiYOJ4hTCJ"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('If').item.json.Name }}",
+            "Email": "={{ $('If').item.json.Email }}",
+            "Phone": "={{ $('If').item.json['Phone Number'] }}",
+            "Course Name": "Reiki"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Todo",
+                  "value": "Todo"
+                },
+                {
+                  "name": "In progress",
+                  "value": "In progress"
+                },
+                {
+                  "name": "Done",
+                  "value": "Done"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Course Name",
+              "displayName": "Course Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Attachments",
+              "displayName": "Attachments",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Attachment Summary",
+              "displayName": "Attachment Summary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        1376,
+        176
+      ],
+      "id": "76ca6f09-593a-44e0-a271-ba9eba3ddd7f",
+      "name": "Create a record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "kRuCwVtdX464UHBn",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Reminder Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Confirmation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirmation Email": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Create a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a database page": {
+      "main": [
+        [
+          {
+            "node": "Create a record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d010eac7-1f56-4ce1-ad62-658b5b2b3d02",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9741ca23fbcdcb8546f2db8f23a5e908f7de375d074f862a3be53d5b995bac48"
+  },
+  "nodeGroups": [],
+  "id": "6Q42pZHL6xRF5ib2",
+  "tags": [
+    {
+      "updatedAt": "2026-06-07T12:47:25.469Z",
+      "createdAt": "2026-06-07T12:47:25.469Z",
+      "id": "o1eTj8hvqEPKuAdQ",
+      "name": "learning"
+    }
+  ]
+}

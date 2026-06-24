@@ -1,0 +1,300 @@
+{
+  "name": "EmailTrigger",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {
+          "dataPropertyAttachmentsPrefixName": "attachment_",
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        80
+      ],
+      "id": "a29bcea5-f041-45b8-ab25-a4c1856cde70",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ttGNL5vW1C0d0GkN",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f8860b02-1f47-41ac-9b0a-7ecac7719b0b",
+              "leftValue": "={{ $(\"Gmail Trigger\").item.binary }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        80
+      ],
+      "id": "dd3bc087-8e3b-45b6-88da-fb31d9b17d01",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "$binary",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        448,
+        80
+      ],
+      "id": "95d4ebb0-3e22-431e-93f9-66ab90d02492",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        672,
+        80
+      ],
+      "id": "c76c951c-b655-483a-814d-2673b5db3454",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        896,
+        -112
+      ],
+      "id": "c68ea7d7-b9ed-422a-b239-7fb37fe4a308",
+      "name": "here loop end no nothing"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tmpfiles.org/api/v1/upload",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "={{ $binary.keys().first() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        896,
+        80
+      ],
+      "id": "06ab7ad8-423b-40bc-8407-d34e25ea28b0",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1344,
+        160
+      ],
+      "id": "3ad1a0f7-f020-4d92-9ec7-e3e01673b757",
+      "name": "Wait",
+      "webhookId": "21f217a0-d065-49f1-810a-900d48e44e27"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "38255b46-548e-809e-9df4-e1fca91cba74",
+          "mode": "list",
+          "cachedResultName": "Tasks Tracker",
+          "cachedResultUrl": "https://app.notion.com/p/38255b46548e809e9df4e1fca91cba74"
+        },
+        "title": "=task:  {{ $('Gmail Trigger').item.json.headers.subject }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Status|status",
+              "statusValue": "Not started"
+            }
+          ]
+        },
+        "blockUi": {
+          "blockValues": [
+            {
+              "type": "image",
+              "url": "={{ $json.data.url }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        80
+      ],
+      "id": "233cfa94-23eb-4626-85da-71bf4bc6062b",
+      "name": "Create a database page",
+      "credentials": {
+        "notionApi": {
+          "id": "VZzpw9GOBHxCDReq",
+          "name": "Notion account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "here loop end no nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Create a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a database page": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "586df705-bbf4-4665-9b49-a0fd83fb0acf",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b8f247bf00ec7c739b68031f7f3a9dc68c25dcd02658ff1ce5c0017cc3503f1f"
+  },
+  "nodeGroups": [],
+  "id": "4C3qIFNt2dxBSsyI",
+  "tags": [
+    {
+      "name": "learning",
+      "id": "9NYRs5TEG4ErepgK",
+      "updatedAt": "2026-06-23T15:35:48.440Z",
+      "createdAt": "2026-06-23T15:35:48.440Z"
+    }
+  ]
+}

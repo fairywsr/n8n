@@ -12,6 +12,9 @@ Here, I store my exported workflow `.json` files, notes on implementation, and l
 | :--- | :--- | :--- |
 | [Welcome Email.json](https://github.com/fairywsr/n8n/blob/main/Welcome%20Email.json) | Welcomes new form submissions via email and logs their details to Google Sheets. | Webhook, Gmail, IF Node, Google Sheets |
 | [orders status Alerts.json](https://github.com/fairywsr/n8n/blob/main/orders%20status%20Alerts.json) | Monitors order status changes in a Google Sheet and sends tailored alerts via Gmail and Slack. | Google Sheets, Switch Node, Gmail, Slack |
+| [EmailTrigger.json](https://github.com/fairywsr/n8n/blob/main/EmailTrigger.json) | Processes incoming emails with attachments, uploads attachments to a temp file server, and automatically logs the uploads as Notion tasks with embedded images. | Gmail Trigger, Filter Node, Split Out, Loop Over Items, HTTP Request, Notion Node, Wait Node |
+| [Merge-node.json](https://github.com/fairywsr/n8n/blob/main/Merge-node.json) | Merges customer order data and order status sheets, calculates dynamic priority rules, removes duplicates, and alerts via Slack and Gmail based on status branches. | Google Sheets, Merge Node, Set Node (Edit Fields), Switch Node, Remove Duplicates, Aggregate, Gmail, Slack |
+| [courses_Management.json](https://github.com/fairywsr/n8n/blob/main/courses_Management.json) | Captures student course registration webhooks, registers data to Google Sheets, routes confirmation or payment reminders based on payment screenshots, alerts on Slack, and syncs data to Notion and Airtable. | Webhook Trigger, Google Sheets, If Node, Gmail, Slack, Notion, Airtable |
 
 ---
 
@@ -106,6 +109,131 @@ graph TD
 
 ---
 
+## 🛠️ Featured Workflow 3: Gmail Attachment Notion Task Tracker
+
+This workflow automates the extraction and storage of email attachments. When an email with attachments is received, it uploads them to a temporary file sharing service and logs them as task entries in a Notion database with embedded attachment previews.
+
+### 🔄 How It Works (Workflow Flow)
+
+```mermaid
+graph TD
+    A[Gmail Trigger: Poll Every Minute] --> B{Filter: Has Attachments?}
+    B -- "Yes" --> C[Split Out: Extract Binary Files]
+    C --> D[Loop Over Items: Process Individually]
+    D -- "Item Data" --> E[HTTP Request: Upload to tmpfiles.org]
+    E --> F[Notion: Create task tracker page with attachment link]
+    F --> G[Wait: Pause 2 Seconds]
+    G --> D
+    D -- "Done" --> H[End Loop (No-Op Node)]
+```
+
+### 🧩 Node Breakdown
+
+1. **Gmail Trigger**
+   - **Purpose:** Polls Gmail inbox every minute for new emails.
+   - **Configuration:** Set to download attachments, prefixing them with `attachment_` for downstream processing.
+2. **Filter (Attachment Check)**
+   - **Purpose:** Ensures the workflow only executes if the email contains attachments.
+   - **Condition:** Evaluates whether `{{ $("Gmail Trigger").item.binary }}` is defined.
+3. **Split Out**
+   - **Purpose:** Disassembles the binary files array into individual objects so they can be processed sequentially.
+4. **Loop Over Items (Split in Batches)**
+   - **Purpose:** Iterates through each file attachment in sequence.
+5. **HTTP Request (Upload Attachment)**
+   - **Purpose:** Performs a `POST` request to `https://tmpfiles.org/api/v1/upload` as `multipart/form-data` containing the file attachment. Returns a public, temporary URL for the file.
+6. **Create a database page (Notion Node)**
+   - **Purpose:** Logs a new page in a database named **Tasks Tracker**.
+   - **Configuration:** Sets status to `Not started`, sets title to `task: [Email Subject]`, and embeds the uploaded image URL as a block using `{{ $json.data.url }}`.
+7. **Wait**
+   - **Purpose:** Pauses execution for 2 seconds before returning to the loop to rate-limit external API calls.
+8. **here loop end no nothing (NoOp Node)**
+   - **Purpose:** Acts as the terminal node when the batch loop completes.
+
+---
+
+## 🛠️ Featured Workflow 4: Order Status & Notification Dispatcher
+
+This workflow combines multiple data sources using the `Merge` node, evaluates delivery priorities, filters out duplicates, and batches notifications for Slack and Gmail alerts based on order status.
+
+### 🔄 How It Works (Workflow Flow)
+
+```mermaid
+graph TD
+    A[Manual Trigger] --> B[Google Sheets: Get Orders Data]
+    A --> C[Google Sheets: Get Order Details]
+    B --> D[Merge Node: Match on order_id]
+    C --> D
+    D --> E[Set Node: Format Name & Set Priority]
+    E --> F{Switch Node: Check Status}
+    F -- "Pending" --> G[Remove Duplicates] --> H[Aggregate] --> I[Gmail: Pending Notification]
+    F -- "Processing" --> J[Remove Duplicates] --> K[Aggregate] --> L[Slack: Urgent Alert]
+    F -- "Cancelled" --> M[Merge: Union Cancelled & Refunded]
+    F -- "Refunded" --> M
+    M --> N[Remove Duplicates] --> O[Aggregate] --> P[Gmail: Cancellation Email & Slack: Support Channel]
+```
+
+### 🧩 Node Breakdown
+
+1. **When clicking ‘Execute workflow’ (Manual Trigger)**
+   - **Purpose:** Starts the workflow execution manually for testing purposes.
+2. **get-orders-data & get orders details (Google Sheets Nodes)**
+   - **Purpose:** Retrieves two sets of data: spreadsheet order customer info and order status logs.
+3. **Merge (Combine Data)**
+   - **Purpose:** Joins the two sheet datasets on the common field `order_id`.
+4. **Edit Fields (Set Node)**
+   - **Purpose:** Constructs custom fields and removes unnecessary columns:
+     - `full_Name`: Combines `first_name` and `last_name`.
+     - `order_prority`: Computes priority based on date: if order status is `processing` and dates exceed 7 days, mark as `high`, otherwise `standard`.
+     - **Cleanup:** Excludes original columns `first_name` and `last_name`.
+5. **Switch (Multi-path Routing)**
+   - **Purpose:** Directs records to specific flows depending on status: `Pending`, `Processing` (if priority is high), `Cancelled`, or `Refunded`.
+6. **Remove Duplicates & Aggregate Nodes**
+   - **Purpose:** Filters records based on `order_id` and aggregates multiple order IDs into a single list format. This ensures only a single summarized notification is sent instead of separate emails for every order.
+7. **Merge1 (Union Node)**
+   - **Purpose:** Merges the Cancelled and Refunded order streams back together before deduplication and notification dispatch.
+8. **Slack & Gmail Notifications**
+   - **Purpose:** Dispatches status summaries to customers via Gmail and alerts internal teams via targeted Slack channels (`#all-testing-n8n` and `#cancel-and-refunded-orders`).
+
+---
+
+## 🛠️ Featured Workflow 5: Course Enrollment & Lead Management
+
+This workflow manages student signups. When a signup webhook triggers, it logs details to Google Sheets and evaluates if a registration fee screenshot has been uploaded. Depending on the payment status, it issues reminders or enrollment confirmations across Gmail, Slack, Notion, and Airtable.
+
+### 🔄 How It Works (Workflow Flow)
+
+```mermaid
+graph TD
+    A[Webhook POST Trigger] --> B[Google Sheets: Append Lead Data]
+    B --> C{If Node: Has Screenshot URL?}
+    C -- "Empty (Unpaid)" --> D[Gmail: Payment Reminder]
+    C -- "Not Empty (Paid)" --> E[Gmail: Enrollment Confirmation]
+    E --> F[Slack: courseenrolls Channel Alert]
+    F --> G[Notion: Create Database Page]
+    G --> H[Airtable: Create Student Record]
+```
+
+### 🧩 Node Breakdown
+
+1. **Webhook Trigger (POST)**
+   - **Purpose:** Receives webhook payload containing name, email, phone number, and a screenshot URL of payment.
+2. **Append Row in Sheet (Google Sheets Node)**
+   - **Purpose:** Logs form submissions in `Lead Management workflow n8n` spreadsheet.
+3. **If (Payment Verification)**
+   - **Purpose:** Determines if a payment screenshot URL was submitted.
+4. **Reminder Email (Gmail Node - Unpaid)**
+   - **Purpose:** Runs when screenshot URL is empty. Sends a prompt asking the student to pay the Rs 25,000 fee and respond with a screenshot.
+5. **Confirmation Email (Gmail Node - Paid)**
+   - **Purpose:** Runs when screenshot URL exists. Confirms receipt and successful enrollment.
+6. **Send a Message (Slack Node)**
+   - **Purpose:** Sends course enrollment details to the team on Slack (`#courseenrolls` channel).
+7. **Create a Database Page (Notion Node)**
+   - **Purpose:** Registers an entry in Notion database **Tasks Tracker** with the student details.
+8. **Create a Record (Airtable Node)**
+   - **Purpose:** Logs student data and records the course name ("Reiki") in Airtable database **Record of students**.
+
+---
+
 ## 💡 Learning Insights & Tips
 
 > [!TIP]
@@ -119,6 +247,18 @@ graph TD
 > [!TIP]
 > **Parallel Node Connections in Switch / Routing Nodes:**
 > In the `orders status Alerts` workflow, both the `Cancelled` and `Refunded` branches of the Switch node are connected to **two destination nodes simultaneously** (Gmail for customers and Slack for internal operations). n8n executes all connected branches in parallel automatically without needing split or fork nodes, making multi-channel notifications extremely straightforward.
+>
+> [!TIP]
+> **Rate Limiting Loops with Wait Nodes:**
+> In the `EmailTrigger` workflow, the `Wait` node is positioned inside the loop. This is an essential pattern for processing items in batches (e.g. uploading images or calling Notion APIs) as it prevents triggering API rate limits or overloading remote endpoints.
+>
+> [!TIP]
+> **Consolidating Messages with Aggregate & Remove Duplicates:**
+> Instead of executing an alert action for every single incoming row, the `Merge-node` workflow uses `Remove Duplicates` followed by `Aggregate`. This collects all processed `order_id` values into a list so that a single summarized Gmail or Slack message is dispatched, vastly improving user experience and API efficiency.
+>
+> [!TIP]
+> **Re-joining Multiple Execution Branches (Merge Node as Union):**
+> In `Merge-node.json`, the Switch node separates "Cancelled" and "Refunded" orders for distinct initial processing, but then merges them back together using `Merge1` set to combine/union. This allows the same notification block to process both states without replicating downstream nodes.
 
 ---
 

@@ -15,6 +15,7 @@ Here, I store my exported workflow `.json` files, notes on implementation, and l
 | [EmailTrigger.json](https://github.com/fairywsr/n8n/blob/main/EmailTrigger.json) | Processes incoming emails with attachments, uploads attachments to a temp file server, and automatically logs the uploads as Notion tasks with embedded images. | Gmail Trigger, Filter Node, Split Out, Loop Over Items, HTTP Request, Notion Node, Wait Node |
 | [Merge-node.json](https://github.com/fairywsr/n8n/blob/main/Merge-node.json) | Merges customer order data and order status sheets, calculates dynamic priority rules, removes duplicates, and alerts via Slack and Gmail based on status branches. | Google Sheets, Merge Node, Set Node (Edit Fields), Switch Node, Remove Duplicates, Aggregate, Gmail, Slack |
 | [courses_Management.json](https://github.com/fairywsr/n8n/blob/main/courses_Management.json) | Captures student course registration webhooks, registers data to Google Sheets, routes confirmation or payment reminders based on payment screenshots, alerts on Slack, and syncs data to Notion and Airtable. | Webhook Trigger, Google Sheets, If Node, Gmail, Slack, Notion, Airtable |
+| [EmailDrafts.json](https://github.com/fairywsr/n8n/blob/main/EmailDrafts.json) | Triggers from incoming mail via IMAP, drafts an AI response using a local Ollama model, and saves it as a Gmail draft. | IMAP Email Read, Basic LLM Chain, Ollama Model, Set Node, Gmail |
 
 ---
 
@@ -234,6 +235,38 @@ graph TD
 
 ---
 
+## 🛠️ Featured Workflow 6: Smart Email Draft Generator
+
+This workflow automates draft email creation. When a new email arrives via IMAP, the workflow extracts the email text, processes it using a local AI model (Ollama) to draft a response, formats the reply content, and saves it directly in Gmail as a draft.
+
+### 🔄 How It Works (Workflow Flow)
+
+```mermaid
+graph TD
+    A["Check New Email (IMAP)"] --> B["Process Email with AI (Basic LLM Chain)"]
+    C["Custom AI Model (Ollama)"] --> B
+    B --> D["Prepare Email Content (Set Node)"]
+    D --> E["Save as Gmail Draft (Gmail Node)"]
+```
+
+### 🧩 Node Breakdown
+
+1. **Check New Email (IMAP)**
+   - **Purpose:** Triggers the workflow when a new email is received in the monitored mailbox via IMAP.
+2. **Process Email with AI (Basic LLM Chain)**
+   - **Purpose:** Orchestrates the LLM prompt. It takes the plain text of the email (`{{ $json.textPlain }}`) and passes it to the AI model with instructions to draft a reply.
+3. **Custom AI Model (Ollama)**
+   - **Purpose:** Connects a local Ollama instance (using model `llama3.2-16000:latest`) to generate the draft reply response.
+4. **Prepare Email Content (Set Node)**
+   - **Purpose:** Standardizes the email draft variables:
+     - `from`: Extracts the sender of the original email.
+     - `subject`: Appends `Re: ` to the original subject line.
+     - `text`: Captures the AI model's text output.
+5. **Save as Gmail Draft (Gmail Node)**
+   - **Purpose:** Creates a new draft in Gmail using the prepared subject and body.
+
+---
+
 ## 💡 Learning Insights & Tips
 
 > [!TIP]
@@ -259,6 +292,10 @@ graph TD
 > [!TIP]
 > **Re-joining Multiple Execution Branches (Merge Node as Union):**
 > In `Merge-node.json`, the Switch node separates "Cancelled" and "Refunded" orders for distinct initial processing, but then merges them back together using `Merge1` set to combine/union. This allows the same notification block to process both states without replicating downstream nodes.
+>
+> [!TIP]
+> **Running Local AI Models with Ollama:**
+> In the `EmailDrafts` workflow, the `Ollama` node connects to a local Ollama service. Ensure that your Ollama server is running locally (defaulting to `http://localhost:11434` or `http://host.docker.internal:11434` in Docker) and that the specified model (`llama3.2-16000:latest` or similar) has been downloaded beforehand via command line (`ollama pull llama3.2-16000:latest`).
 
 ---
 

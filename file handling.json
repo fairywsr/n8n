@@ -1,0 +1,226 @@
+{
+  "name": "file handling",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        80
+      ],
+      "id": "5a365f1d-01e9-4295-b687-387e537fd057",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://dklkud2sn1tvi.cloudfront.net/migrated/product-image/194203/day-9-2-.jpg",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        224,
+        176
+      ],
+      "id": "8618c2c0-c295-47f5-9fed-ac04622dca43",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 1,
+        "simple": false,
+        "filters": {},
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        -16
+      ],
+      "id": "19e386cd-cc8a-43e6-8654-3ec6389d47e6",
+      "name": "Get many messages",
+      "webhookId": "b9e01e59-af0b-47a5-b4ec-0f36f3e910d8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ttGNL5vW1C0d0GkN",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "$binary",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -240
+      ],
+      "id": "81fb93b7-ec83-44c9-877f-a0a0ad89f5e8",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "operation": "compress",
+        "binaryPropertyName": "attachment_1,attachment_2,attachment_3",
+        "fileName": "={{ $json.subject }}_attachments"
+      },
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        -16
+      ],
+      "id": "d3cc2652-fb2b-4d7e-bde5-760ebd4d4395",
+      "name": "Compression"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        -16
+      ],
+      "id": "9bd3bad7-62cd-4f17-8c5b-545bbdabae05",
+      "name": "deCompress"
+    },
+    {
+      "parameters": {
+        "name": "={{ $json.fileName }}",
+        "driveId": {
+          "__rl": true,
+          "value": "=My Drive",
+          "mode": "id"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1jGq7fNETv9oWX2g_BQIRG6apkRd31NIh",
+          "mode": "list",
+          "cachedResultName": "Files fron n8n",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1jGq7fNETv9oWX2g_BQIRG6apkRd31NIh"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1120,
+        -16
+      ],
+      "id": "c9b683c0-2330-49a5-a5f9-2f447636159b",
+      "name": "Upload file",
+      "executeOnce": false,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "9naG8HpagBcFCcXC",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = [];\nconst binaryKeys = Object.keys($input.item.binary);\n\nfor (const key of binaryKeys) {\n  items.push({\n    json: { fileName: $input.item.binary[key].fileName },\n    binary: { data: $input.item.binary[key] }\n  });\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -16
+      ],
+      "id": "fbc7e161-c871-4675-aa54-21ff1f46752b",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "Compression",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compression": {
+      "main": [
+        [
+          {
+            "node": "deCompress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "deCompress": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "bd5105b0-7834-4a44-b81e-1523d4ad0c43",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b8f247bf00ec7c739b68031f7f3a9dc68c25dcd02658ff1ce5c0017cc3503f1f"
+  },
+  "nodeGroups": [],
+  "id": "sY8s76ZL4yrZXAJ4",
+  "tags": [
+    {
+      "updatedAt": "2026-06-23T15:35:48.440Z",
+      "createdAt": "2026-06-23T15:35:48.440Z",
+      "id": "9NYRs5TEG4ErepgK",
+      "name": "learning"
+    }
+  ]
+}

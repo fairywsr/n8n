@@ -16,6 +16,7 @@ Here, I store my exported workflow `.json` files, notes on implementation, and l
 | [Merge-node.json](https://github.com/fairywsr/n8n/blob/main/Merge-node.json) | Merges customer order data and order status sheets, calculates dynamic priority rules, removes duplicates, and alerts via Slack and Gmail based on status branches. | Google Sheets, Merge Node, Set Node (Edit Fields), Switch Node, Remove Duplicates, Aggregate, Gmail, Slack |
 | [courses_Management.json](https://github.com/fairywsr/n8n/blob/main/courses_Management.json) | Captures student course registration webhooks, registers data to Google Sheets, routes confirmation or payment reminders based on payment screenshots, alerts on Slack, and syncs data to Notion and Airtable. | Webhook Trigger, Google Sheets, If Node, Gmail, Slack, Notion, Airtable |
 | [EmailDrafts.json](https://github.com/fairywsr/n8n/blob/main/EmailDrafts.json) | Triggers from incoming mail via IMAP, drafts an AI response using a local Ollama model, and saves it as a Gmail draft. | IMAP Email Read, Basic LLM Chain, Ollama Model, Set Node, Gmail |
+| [file handling.json](https://github.com/fairywsr/n8n/blob/main/file%20handling.json) | Downloads email attachments, compresses them to a zip, decompresses them, and uploads each file to Google Drive using a JS code snippet. | Manual Trigger, Gmail, HTTP Request, Compression Node, Code Node (JS), Google Drive |
 
 ---
 
@@ -267,6 +268,62 @@ graph TD
 
 ---
 
+## 🛠️ Featured Workflow 7: File Handling (Compression & Google Drive)
+
+This workflow demonstrates how to download email attachments, zip them using the Compression node, unzip them, extract individual files from binary data using custom JavaScript, and upload each file to Google Drive.
+
+### 🔄 How It Works (Workflow Flow)
+
+```mermaid
+graph TD
+    A[Manual Trigger] --> B[Gmail Node: Get many messages]
+    A --> C[HTTP Request: Fetch Image]
+    B --> D[Compression: Zip Attachments]
+    D --> E[deCompress: Unzip Archive]
+    E --> F[Code Node: Extract Files via JS]
+    F --> G[Google Drive: Upload Files]
+```
+
+### 🧩 Node Breakdown
+
+1. **When clicking ‘Execute workflow’ (Manual Trigger)**
+   - **Purpose:** Manually initiates the workflow execution.
+
+2. **HTTP Request**
+   - **Purpose:** Standalone request that fetches a sample product image from a URL, running in parallel with the Gmail node.
+
+3. **Get many messages (Gmail Node)**
+   - **Purpose:** Connects to Gmail to retrieve recent emails and automatically download their attachments.
+
+4. **Compression (Compression Node)**
+   - **Purpose:** Compresses the downloaded attachments (`attachment_1`, `attachment_2`, and `attachment_3`) into a single zip archive.
+   - **Filename:** `{{ $json.subject }}_attachments`
+
+5. **deCompress (Compression Node)**
+   - **Purpose:** Decompresses the zipped archive to retrieve the original files.
+
+6. **Code in JavaScript (Code Node)**
+   - **Purpose:** Uses custom JavaScript to iterate over the decompressed binary data keys, restructuring them into a list of individual file items with their names and binary payloads.
+   - **Code:**
+     ```javascript
+     const items = [];
+     const binaryKeys = Object.keys($input.item.binary);
+
+     for (const key of binaryKeys) {
+       items.push({
+         json: { fileName: $input.item.binary[key].fileName },
+         binary: { data: $input.item.binary[key] }
+       });
+     }
+
+     return items;
+     ```
+
+7. **Upload file (Google Drive Node)**
+   - **Purpose:** Iterates through each file returned by the Code node and uploads it to a specific Google Drive folder (`Files fron n8n`).
+
+---
+
 ## 💡 Learning Insights & Tips
 
 > [!TIP]
@@ -296,6 +353,10 @@ graph TD
 > [!TIP]
 > **Running Local AI Models with Ollama:**
 > In the `EmailDrafts` workflow, the `Ollama` node connects to a local Ollama service. Ensure that your Ollama server is running locally (defaulting to `http://localhost:11434` or `http://host.docker.internal:11434` in Docker) and that the specified model (`llama3.2-16000:latest` or similar) has been downloaded beforehand via command line (`ollama pull llama3.2-16000:latest`).
+>
+> [!TIP]
+> **Splitting Decompressed Files for Downstream Nodes:**
+> After using a `deCompress` node to unpack a zip file, the resulting files are typically stored as keys within a single binary block. To process or upload these files individually (like in the Google Drive upload step), we can use a **Code Node** with JavaScript to dynamically map the keys of `$input.item.binary` into an array of separate objects, converting a single batch record into individual streamable item entities.
 
 ---
 
